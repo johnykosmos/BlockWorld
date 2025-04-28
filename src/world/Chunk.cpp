@@ -48,6 +48,30 @@ Vec2 faceUVs[4] = {
         {1.0f, 0.0f}  
     };
 
+bool ChunkCords::operator==(const ChunkCords& other) const {
+    return (this->x == other.x && this->z == other.z) ? true : false;
+}
+
+bool ChunkCords::operator<(const ChunkCords& other) const {
+        if (x != other.x) {
+            return x < other.x; 
+        }
+        return z < other.z; 
+    }
+
+Chunk::Chunk(ChunkCords position) : position(position) {
+    for (int x = 0; x < CHUNK_SIZE_X; x++) {
+        for (int y = 0; y < CHUNK_SIZE_Y; y++) {
+            for (int z = 0; z < CHUNK_SIZE_Z; z++) {
+                if (y > 6)
+                    setBlock(x, y, z, BlockID::Air);       
+                else
+                    setBlock(x, y, z, BlockID::Stone);
+            }
+        }
+    }
+    this->translate(Vec3{position.x * CHUNK_SIZE_X, 0.0f, position.z * CHUNK_SIZE_Z});
+}
 
 const eng::Mesh& Chunk::getMesh() const {
     return mesh;
@@ -96,13 +120,13 @@ void Chunk::buildMesh() {
                     int nZ = z + (int)face.normal.z;
                     if (nX < 0 || nX >= CHUNK_SIZE_X || 
                             nY < 0 || nY >= CHUNK_SIZE_Y || 
-                            nZ < 0 || nZ >= CHUNK_SIZE_Z) {
-                        appendFaceVertices(Vec3{x, y, z}, face, vertices, indices);
+                            nZ < 0 || nZ >= CHUNK_SIZE_Z ||
+                            blocks[nX][nY][nZ] == BlockID::Air) {
+                        appendFaceVertices(
+                                Vec3{x, y, z}, 
+                                face, vertices, indices);
                     }
 
-                    if (blocks[nX][nY][nZ] == BlockID::Air) {
-                        appendFaceVertices(Vec3{x, y, z}, face, vertices, indices);
-                    }
                 }
                 
             }
@@ -110,4 +134,5 @@ void Chunk::buildMesh() {
     }
     
     mesh.updateData(vertices.data(), vertices.size(), indices.data(), indices.size());
+    
 }

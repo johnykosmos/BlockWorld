@@ -22,10 +22,17 @@ struct Face {
     Vec3 normal;
 };
 
+struct ChunkCords {
+    int x, z;
+
+    bool operator==(const ChunkCords& other) const;
+    bool operator<(const ChunkCords& other) const;
+};
+
 class Chunk : public eng::Entity {
     private:
         BlockID blocks[CHUNK_SIZE_X][CHUNK_SIZE_Y][CHUNK_SIZE_Z];
-        iVec2 worldPosition;
+        ChunkCords position;
         eng::Mesh mesh;
 
     private: 
@@ -34,6 +41,7 @@ class Chunk : public eng::Entity {
                 std::vector<unsigned int>& indices);
 
     public:
+        Chunk(ChunkCords position);
         const eng::Mesh& getMesh() const override;
         BlockID getBlock(int x, int y, int z) const;
         void setBlock(int x, int y, int z, BlockID blockID);
