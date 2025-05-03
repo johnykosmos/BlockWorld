@@ -1,6 +1,5 @@
 #include "Chunk.hpp"
-#include "GLBuffers.hpp"
-#include <vector>
+#include <iostream>
 
 
 Face cubeFaces[6] = {
@@ -14,16 +13,6 @@ Face cubeFaces[6] = {
         .position = { {0,0,1}, {0,1,1}, {0,1,0}, {0,0,0} },
         .normal = {-1,0,0}
     },
-    // Top
-    {
-        .position = { {0,1,0}, {0,1,1}, {1,1,1}, {1,1,0} },
-        .normal = {0,1,0}
-    },
-    // Bottom
-    {
-        .position = { {0,0,1}, {0,0,0}, {1,0,0}, {1,0,1} },
-        .normal = {0,-1,0}
-    },
     // Front
     {
         .position = { {1,0,1}, {1,1,1}, {0,1,1}, {0,0,1} },
@@ -33,6 +22,16 @@ Face cubeFaces[6] = {
     {
         .position = { {0,0,0}, {0,1,0}, {1,1,0}, {1,0,0} },
         .normal = {0,0,-1}
+    },
+    // Top
+    {
+        .position = { {0,1,0}, {0,1,1}, {1,1,1}, {1,1,0} },
+        .normal = {0,1,0}
+    },
+    // Bottom
+    {
+        .position = { {0,0,1}, {0,0,0}, {1,0,0}, {1,0,1} },
+        .normal = {0,-1,0}
     }
 };
 
@@ -85,6 +84,12 @@ void Chunk::setBlock(int x, int y, int z, BlockID blockID) {
     blocks[x][y][z] = blockID;
 }
 
+bool Chunk::isNeighborBlockTransparent(const Chunk& neighbor,
+        const iVec3 neighborBlockPos) const {
+    return (neighbor.getBlock(neighborBlockPos.x,
+                neighborBlockPos.y, neighborBlockPos.z) == BlockID::Air);
+}
+
 void Chunk::appendFaceVertices(const Vec3& coordinates, const Face& face, 
         std::vector<eng::Vertex>& vertices,
         std::vector<unsigned int>& indices) {
@@ -104,7 +109,7 @@ void Chunk::appendFaceVertices(const Vec3& coordinates, const Face& face,
     }
 }
 
-void Chunk::buildMesh() {
+void Chunk::buildMesh(const Chunk* neighbors[]) {
     std::vector<eng::Vertex> vertices;
     std::vector<unsigned int> indices;
     for (int x = 0; x < CHUNK_SIZE_X; x++) {
@@ -118,17 +123,24 @@ void Chunk::buildMesh() {
                     int nX = x + (int)face.normal.x;
                     int nY = y + (int)face.normal.y;
                     int nZ = z + (int)face.normal.z;
-                    if (nX < 0 || nX >= CHUNK_SIZE_X || 
-                            nY < 0 || nY >= CHUNK_SIZE_Y || 
-                            nZ < 0 || nZ >= CHUNK_SIZE_Z ||
-                            blocks[nX][nY][nZ] == BlockID::Air) {
-                        appendFaceVertices(
-                                Vec3{x, y, z}, 
-                                face, vertices, indices);
+                    if (nX >= 0 && nX < CHUNK_SIZE_X && 
+                            nY >= 0 && nY < CHUNK_SIZE_Y && 
+                            nZ >= 0 && nZ < CHUNK_SIZE_Z) {
+                        if (blocks[nX][nY][nZ] == BlockID::Air) {
+                            appendFaceVertices(Vec3{x, y, z}, 
+                                    face, vertices, indices);
+                        }
+                    }else if (neighbors[dir]) {
+                        int neighborX = (nX + CHUNK_SIZE_X) % CHUNK_SIZE_X;
+                        int neighborZ = (nZ + CHUNK_SIZE_Z) % CHUNK_SIZE_Z;
+                        if(isNeighborBlockTransparent(*neighbors[dir], iVec3{neighborX, y, neighborZ})) {
+                            assert(dir <= 3);
+                            appendFaceVertices(Vec3{x, y, z}, 
+                                    face, vertices, indices);               
+                        }
                     }
-
                 }
-                
+
             }
         }
     }

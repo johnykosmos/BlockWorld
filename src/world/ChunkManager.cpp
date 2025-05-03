@@ -8,13 +8,27 @@ const CordChunkMap& ChunkManager::getLoadedChunks() const {
     return loadedChunks;
 }
 
+const Chunk* ChunkManager::getChunk(ChunkCords position) {
+    auto it = loadedChunks.find(position);
+    if (it != loadedChunks.end()) {
+        return loadedChunks[position].get();
+    }
+    return nullptr;
+}
+
 bool ChunkManager::loadMissingChunks(std::vector<ChunkCords>& missingChunks) {
     bool updated = false;
     for (const auto& missingCords : missingChunks) {
         auto it = loadedChunks.find(missingCords);
         if (it == loadedChunks.end()) {
             loadedChunks[missingCords] = std::make_unique<Chunk>(missingCords);
-            loadedChunks[missingCords]->buildMesh();
+            const Chunk* chunkNeighbors[6] = {
+                getChunk(ChunkCords{missingCords.x + 1, missingCords.z}),
+                getChunk(ChunkCords{missingCords.x - 1, missingCords.z}),
+                getChunk(ChunkCords{missingCords.x, missingCords.z + 1}),
+                getChunk(ChunkCords{missingCords.x, missingCords.z - 1}),
+            };
+            loadedChunks[missingCords]->buildMesh(chunkNeighbors);
             updated = true;
             std::cout << "Loaded a chunk at: " << missingCords.x << " " << missingCords.z << "\n";
         }

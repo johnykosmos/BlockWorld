@@ -29,6 +29,7 @@ struct ChunkCords {
     bool operator<(const ChunkCords& other) const;
 };
 
+
 class Chunk : public eng::Entity {
     private:
         BlockID blocks[CHUNK_SIZE_X][CHUNK_SIZE_Y][CHUNK_SIZE_Z];
@@ -36,6 +37,8 @@ class Chunk : public eng::Entity {
         eng::Mesh mesh;
 
     private: 
+        bool isNeighborBlockTransparent(const Chunk& neighbor, 
+                const iVec3 neighborBlockPos) const;
         void appendFaceVertices(const Vec3& coordinates, const Face& face, 
                 std::vector<eng::Vertex>& vertices,
                 std::vector<unsigned int>& indices);
@@ -45,5 +48,5 @@ class Chunk : public eng::Entity {
         const eng::Mesh& getMesh() const override;
         BlockID getBlock(int x, int y, int z) const;
         void setBlock(int x, int y, int z, BlockID blockID);
-        void buildMesh();
+        void buildMesh(const Chunk* neighbors[]);
 };
