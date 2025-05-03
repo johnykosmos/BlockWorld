@@ -9,7 +9,7 @@
 #include "Texture.hpp"
 #include "world/ChunkManager.hpp"
 
-#define RENDER_DISTANCE 8
+#define RENDER_DISTANCE 2
 
 class MainScene : public eng::Scene {
     private:
