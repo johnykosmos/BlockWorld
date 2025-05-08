@@ -106,9 +106,10 @@ void Chunk::setBlock(int x, int y, int z, BlockID blockID) {
     blocks[x][y][z] = blockID;
 }
 
-bool Chunk::isNeighborBlockTransparent(const Chunk& neighbor,
+bool Chunk::isNeighborBlockTransparent(const Chunk* neighbor,
         const iVec3 neighborBlockPos) const {
-    return (neighbor.getBlock(neighborBlockPos.x,
+    if (!neighbor) return true;
+    return (neighbor->getBlock(neighborBlockPos.x,
                 neighborBlockPos.y, neighborBlockPos.z) == BlockID::Air);
 }
 
@@ -127,13 +128,16 @@ void Chunk::appendFaceVertices(BlockID block,
                 textureUV[i].y + BASE_UV * offsetUV.y
             }
         };
-//0 + offset * 
         vertices.push_back(vertex);
     }
     
     for (int i = 0; i < INDICES_PER_FACE; i++) {
         indices.push_back(startIndex + cubeFaceIndices[i]);
     }
+}
+
+bool Chunk::isDirty() const {
+    return dirty;
 }
 
 void Chunk::buildMesh(const Chunk* neighbors[]) {
@@ -158,11 +162,11 @@ void Chunk::buildMesh(const Chunk* neighbors[]) {
                             appendFaceVertices(block, Vec3{x, y, z}, 
                                     face, vertices, indices);
                         }
-                    }else if (neighbors[dir]) {
+                    }else if (dir < 4) {
+                        assert(dir < 4);
                         int neighborX = (nX + CHUNK_SIZE_X) % CHUNK_SIZE_X;
                         int neighborZ = (nZ + CHUNK_SIZE_Z) % CHUNK_SIZE_Z;
-                        if(isNeighborBlockTransparent(*neighbors[dir], iVec3{neighborX, y, neighborZ})) {
-                            assert(dir <= 3);
+                        if(isNeighborBlockTransparent(neighbors[dir], iVec3{neighborX, y, neighborZ})) {
                             appendFaceVertices(block, Vec3{x, y, z}, 
                                     face, vertices, indices);               
                         }
@@ -174,5 +178,5 @@ void Chunk::buildMesh(const Chunk* neighbors[]) {
     }
     
     mesh.updateData(vertices.data(), vertices.size(), indices.data(), indices.size());
-    
+    dirty = false; 
 }

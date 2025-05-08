@@ -19,10 +19,8 @@ const Chunk* ChunkManager::getChunk(ChunkCords position) {
 bool ChunkManager::loadMissingChunks(std::vector<ChunkCords>& missingChunks) {
     bool updated = false;
     for (const auto& missingCords : missingChunks) {
-        auto it = loadedChunks.find(missingCords);
-        if (it == loadedChunks.end()) {
-            loadedChunks[missingCords] = std::make_unique<Chunk>(missingCords);
-            const Chunk* chunkNeighbors[6] = {
+        if(loadedChunks[missingCords]->isDirty()) {
+            const Chunk* chunkNeighbors[4] = {
                 getChunk(ChunkCords{missingCords.x + 1, missingCords.z}),
                 getChunk(ChunkCords{missingCords.x - 1, missingCords.z}),
                 getChunk(ChunkCords{missingCords.x, missingCords.z + 1}),
@@ -67,10 +65,12 @@ bool ChunkManager::updateChunks(Vec3 playerPosition,
     for (int x = -renderDistance; x < renderDistance; x++) {
         for (int z = -renderDistance; z < renderDistance; z++) {
             ChunkCords wantedCords = {
-                .x = (int)playerPosition.x/16 + x,
-                .z = (int)playerPosition.z/16 + z
+                .x = (int)playerPosition.x/CHUNK_SIZE_X + x,
+                .z = (int)playerPosition.z/CHUNK_SIZE_Z + z
             };
-
+            if (!getChunk(wantedCords)) {
+                loadedChunks[wantedCords] = std::make_unique<Chunk>(wantedCords);
+            }
             wantedChunks.push_back(wantedCords);
         }
     }

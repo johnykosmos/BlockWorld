@@ -33,9 +33,10 @@ class Chunk : public eng::Entity {
         BlockID blocks[CHUNK_SIZE_X][CHUNK_SIZE_Y][CHUNK_SIZE_Z];
         ChunkCords position;
         eng::Mesh mesh;
+        bool dirty = true;
 
     private: 
-        bool isNeighborBlockTransparent(const Chunk& neighbor, 
+        bool isNeighborBlockTransparent(const Chunk* neighbor, 
                 const iVec3 neighborBlockPos) const;
         void appendFaceVertices(BlockID block, 
                 const Vec3& coordinates, const Face& face, 
@@ -47,5 +48,6 @@ class Chunk : public eng::Entity {
         const eng::Mesh& getMesh() const override;
         BlockID getBlock(int x, int y, int z) const;
         void setBlock(int x, int y, int z, BlockID blockID);
+        bool isDirty() const;
         void buildMesh(const Chunk* neighbors[]);
 };
