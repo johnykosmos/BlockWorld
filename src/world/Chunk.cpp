@@ -1,4 +1,7 @@
 #include "Chunk.hpp"
+#include "world/BlockAtlas.hpp"
+#include <cstdlib>
+#include <ctime>
 #include <iostream>
 
 
@@ -40,11 +43,11 @@ unsigned int cubeFaceIndices[INDICES_PER_FACE] = {
     0, 2, 3
 };
 
-Vec2 faceUVs[4] = {
-        {0.0f, 0.0f}, 
-        {0.0f, 1.0f}, 
-        {1.0f, 1.0f}, 
-        {1.0f, 0.0f}  
+Vec2 textureUV[4] = {
+    {0.0f, BASE_UV},
+    {0.0f, 0.0f}, 
+    {BASE_UV, 0.0f},     
+    {BASE_UV, BASE_UV}, 
     };
 
 bool ChunkCords::operator==(const ChunkCords& other) const {
@@ -59,13 +62,32 @@ bool ChunkCords::operator<(const ChunkCords& other) const {
     }
 
 Chunk::Chunk(ChunkCords position) : position(position) {
+    srand(time(NULL));
     for (int x = 0; x < CHUNK_SIZE_X; x++) {
         for (int y = 0; y < CHUNK_SIZE_Y; y++) {
             for (int z = 0; z < CHUNK_SIZE_Z; z++) {
                 if (y > 6)
                     setBlock(x, y, z, BlockID::Air);       
-                else
-                    setBlock(x, y, z, BlockID::Stone);
+                else {
+                    int choice = rand() % 5;
+                    switch(choice) {
+                        case 0:
+                            setBlock(x, y, z, BlockID::Air); 
+                            break;
+                        case 1:
+                            setBlock(x, y, z, BlockID::Stone);
+                            break;
+                        case 2:
+                            setBlock(x, y, z, BlockID::Dirt);
+                            break;
+                        case 3:
+                            setBlock(x, y, z, BlockID::Sand);
+                            break;
+                        case 4:
+                            setBlock(x, y, z, BlockID::Grass);
+                            break;
+                    }
+                }
             }
         }
     }
@@ -90,17 +112,22 @@ bool Chunk::isNeighborBlockTransparent(const Chunk& neighbor,
                 neighborBlockPos.y, neighborBlockPos.z) == BlockID::Air);
 }
 
-void Chunk::appendFaceVertices(const Vec3& coordinates, const Face& face, 
+void Chunk::appendFaceVertices(BlockID block,
+        const Vec3& coordinates, const Face& face, 
         std::vector<eng::Vertex>& vertices,
         std::vector<unsigned int>& indices) {
     unsigned int startIndex = vertices.size();
+    const Vec2 offsetUV = BlockAtlas::getFaceTextureUV(block, face.normal);
     for (int i = 0; i < VERTICES_PER_FACE; i++) {
         eng::Vertex vertex = {
             .vertices = face.position[i] + coordinates,
             .normal = face.normal,
-            .texturePos = faceUVs[i] 
+            .texturePos = Vec2{
+                textureUV[i].x + BASE_UV * offsetUV.x,
+                textureUV[i].y + BASE_UV * offsetUV.y
+            }
         };
-
+//0 + offset * 
         vertices.push_back(vertex);
     }
     
@@ -115,7 +142,8 @@ void Chunk::buildMesh(const Chunk* neighbors[]) {
     for (int x = 0; x < CHUNK_SIZE_X; x++) {
         for (int y = 0; y < CHUNK_SIZE_Y; y++) {
             for (int z = 0; z < CHUNK_SIZE_Z; z++) {
-                if (blocks[x][y][z] == BlockID::Air) 
+                BlockID block = blocks[x][y][z]; 
+                if (block == BlockID::Air) 
                     continue;
 
                 for (int dir = 0; dir < CUBE_FACES; dir++) {
@@ -127,7 +155,7 @@ void Chunk::buildMesh(const Chunk* neighbors[]) {
                             nY >= 0 && nY < CHUNK_SIZE_Y && 
                             nZ >= 0 && nZ < CHUNK_SIZE_Z) {
                         if (blocks[nX][nY][nZ] == BlockID::Air) {
-                            appendFaceVertices(Vec3{x, y, z}, 
+                            appendFaceVertices(block, Vec3{x, y, z}, 
                                     face, vertices, indices);
                         }
                     }else if (neighbors[dir]) {
@@ -135,7 +163,7 @@ void Chunk::buildMesh(const Chunk* neighbors[]) {
                         int neighborZ = (nZ + CHUNK_SIZE_Z) % CHUNK_SIZE_Z;
                         if(isNeighborBlockTransparent(*neighbors[dir], iVec3{neighborX, y, neighborZ})) {
                             assert(dir <= 3);
-                            appendFaceVertices(Vec3{x, y, z}, 
+                            appendFaceVertices(block, Vec3{x, y, z}, 
                                     face, vertices, indices);               
                         }
                     }

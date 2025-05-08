@@ -2,6 +2,8 @@
 
 #include "Typedefs.hpp"
 #include "Entity.hpp"
+#include "BlockAtlas.hpp"
+ 
 
 #define CHUNK_SIZE_X 16
 #define CHUNK_SIZE_Y 16
@@ -11,11 +13,7 @@
 #define VERTICES_PER_FACE 4
 #define INDICES_PER_FACE 6
 
-enum class BlockID : int {
-    Air = 0,
-    Grass = 1,
-    Stone = 2
-};
+constexpr float BASE_UV = 1.0f/4;
 
 struct Face {
     Vec3 position[VERTICES_PER_FACE];
@@ -39,7 +37,8 @@ class Chunk : public eng::Entity {
     private: 
         bool isNeighborBlockTransparent(const Chunk& neighbor, 
                 const iVec3 neighborBlockPos) const;
-        void appendFaceVertices(const Vec3& coordinates, const Face& face, 
+        void appendFaceVertices(BlockID block, 
+                const Vec3& coordinates, const Face& face, 
                 std::vector<eng::Vertex>& vertices,
                 std::vector<unsigned int>& indices);
 
