@@ -33,6 +33,9 @@ class Chunk : public eng::Entity {
         BlockID blocks[CHUNK_SIZE_X][CHUNK_SIZE_Y][CHUNK_SIZE_Z];
         ChunkCords position;
         eng::Mesh mesh;
+        std::vector<eng::Vertex> vertices;
+        std::vector<unsigned int> indices;
+
         bool dirty = true;
 
     private: 
@@ -46,8 +49,10 @@ class Chunk : public eng::Entity {
     public:
         Chunk(ChunkCords position);
         const eng::Mesh& getMesh() const override;
+        const ChunkCords getCords() const;
         BlockID getBlock(int x, int y, int z) const;
         void setBlock(int x, int y, int z, BlockID blockID);
         bool isDirty() const;
         void buildMesh(const Chunk* neighbors[]);
+        void updateMeshData();
 };

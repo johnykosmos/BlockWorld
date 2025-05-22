@@ -2,8 +2,6 @@
 #include "world/BlockAtlas.hpp"
 #include <cstdlib>
 #include <ctime>
-#include <iostream>
-
 
 Face cubeFaces[6] = {
     // Right
@@ -98,6 +96,10 @@ const eng::Mesh& Chunk::getMesh() const {
     return mesh;
 }
 
+const ChunkCords Chunk::getCords() const {
+    return position;
+}
+
 BlockID Chunk::getBlock(int x, int y, int z) const {
     return blocks[x][y][z];
 }
@@ -141,8 +143,8 @@ bool Chunk::isDirty() const {
 }
 
 void Chunk::buildMesh(const Chunk* neighbors[]) {
-    std::vector<eng::Vertex> vertices;
-    std::vector<unsigned int> indices;
+    vertices.clear();
+    indices.clear();
     for (int x = 0; x < CHUNK_SIZE_X; x++) {
         for (int y = 0; y < CHUNK_SIZE_Y; y++) {
             for (int z = 0; z < CHUNK_SIZE_Z; z++) {
@@ -177,6 +179,9 @@ void Chunk::buildMesh(const Chunk* neighbors[]) {
         }
     }
     
-    mesh.updateData(vertices.data(), vertices.size(), indices.data(), indices.size());
     dirty = false; 
+}
+
+void Chunk::updateMeshData() {
+    mesh.updateData(vertices.data(), vertices.size(), indices.data(), indices.size());
 }
