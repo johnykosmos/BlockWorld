@@ -19,18 +19,22 @@ const Chunk* ChunkManager::getChunk(ChunkCords position) {
 bool ChunkManager::loadMissingChunks(std::vector<ChunkCords>& missingChunks) {
     bool updated = false;
     for (const auto& missingCords : missingChunks) {
-        if(loadedChunks[missingCords]->isDirty()) {
-            const Chunk* chunkNeighbors[4] = {
-                getChunk(ChunkCords{missingCords.x + 1, missingCords.z}),
-                getChunk(ChunkCords{missingCords.x - 1, missingCords.z}),
-                getChunk(ChunkCords{missingCords.x, missingCords.z + 1}),
-                getChunk(ChunkCords{missingCords.x, missingCords.z - 1}),
+        if(loadedChunks[missingCords] && loadedChunks[missingCords]->isDirty()) {
+            const ChunkBuildData data = {
+                .chunk = loadedChunks[missingCords].get(),
+                .chunkNeighbors = {
+                    getChunk(ChunkCords{missingCords.x + 1, missingCords.z}),
+                    getChunk(ChunkCords{missingCords.x - 1, missingCords.z}),
+                    getChunk(ChunkCords{missingCords.x, missingCords.z + 1}),
+                    getChunk(ChunkCords{missingCords.x, missingCords.z - 1}),
+                }
             };
-            loadedChunks[missingCords]->buildMesh(chunkNeighbors);
+            chunkBuilder.enqueueChunk(data);
             updated = true;
             std::cout << "Loaded a chunk at: " << missingCords.x << " " << missingCords.z << "\n";
         }
     }
+    chunkBuilder.pollFinishedChunks();    
     return updated;
 }
 
