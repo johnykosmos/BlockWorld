@@ -11,6 +11,8 @@ add_executable(
     src/scene/MainScene.cpp
     src/world/Chunk.cpp
     src/world/ChunkManager.cpp
+    src/world/BlockAtlas.cpp
+    src/world/ChunkBuilder.cpp
 )
 
 target_include_directories(BlockWorld
