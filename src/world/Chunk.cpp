@@ -1,7 +1,8 @@
 #include "Chunk.hpp"
 #include "world/BlockAtlas.hpp"
-#include <cstdlib>
-#include <ctime>
+#include <algorithm>
+#include <cmath>
+#include <cstring>
 
 Face cubeFaces[6] = {
     // Right
@@ -60,35 +61,7 @@ bool ChunkCords::operator<(const ChunkCords& other) const {
     }
 
 Chunk::Chunk(ChunkCords position) : position(position) {
-    srand(time(NULL));
-    for (int x = 0; x < CHUNK_SIZE_X; x++) {
-        for (int y = 0; y < CHUNK_SIZE_Y; y++) {
-            for (int z = 0; z < CHUNK_SIZE_Z; z++) {
-                if (y > 6)
-                    setBlock(x, y, z, BlockID::Air);       
-                else {
-                    int choice = rand() % 5;
-                    switch(choice) {
-                        case 0:
-                            setBlock(x, y, z, BlockID::Air); 
-                            break;
-                        case 1:
-                            setBlock(x, y, z, BlockID::Stone);
-                            break;
-                        case 2:
-                            setBlock(x, y, z, BlockID::Dirt);
-                            break;
-                        case 3:
-                            setBlock(x, y, z, BlockID::Sand);
-                            break;
-                        case 4:
-                            setBlock(x, y, z, BlockID::Grass);
-                            break;
-                    }
-                }
-            }
-        }
-    }
+    memset(blocks, 0, sizeof(blocks));
     this->translate(Vec3{position.x * CHUNK_SIZE_X, 0.0f, position.z * CHUNK_SIZE_Z});
 }
 
@@ -108,8 +81,30 @@ void Chunk::setBlock(int x, int y, int z, BlockID blockID) {
     blocks[x][y][z] = blockID;
 }
 
-void Chunk::generateTerrain(const FastNoiseLite& noise) {
-    
+void Chunk::generateTerrain(const Noise& noise) {
+    for (int x = 0; x < CHUNK_SIZE_X; x++) {
+        for (int z = 0; z < CHUNK_SIZE_Z; z++) {
+            float worldX = float(position.x * CHUNK_SIZE_X + x);
+            float worldZ = float(position.z * CHUNK_SIZE_Z + z);
+            float baseValue = (noise.base->GetNoise(worldX, worldZ) + 1.0f) * 0.5f;
+
+            float detailValue = (noise.detail->GetNoise(worldX, worldZ) + 1.0f) * 0.5f;
+            float finalValue = baseValue + pow(detailValue, 4.0f);
+            int height = int(finalValue * (CHUNK_SIZE_Y - 6));
+            height = std::clamp(height, 0, CHUNK_SIZE_Y - 6);
+            for (int y = height; y >= 0; y--) {
+                BlockID block;
+                if (y == height) {
+                    block = BlockID::Grass;
+                } else if (y >= height - 3) {
+                    block = BlockID::Dirt;
+                } else {
+                    block = BlockID::Stone;
+                }
+                setBlock(x, y, z, block);
+            }
+        }
+    }
 }
 
 bool Chunk::isNeighborBlockTransparent(const Chunk* neighbor,

@@ -6,8 +6,10 @@
 #include "FastNoiseLite.h"
 
 #define CHUNK_SIZE_X 16
-#define CHUNK_SIZE_Y 16
+#define CHUNK_SIZE_Y 32
 #define CHUNK_SIZE_Z 16
+
+#define SEA_TRESHOLD 13
 
 #define CUBE_FACES 6
 #define VERTICES_PER_FACE 4
@@ -27,6 +29,10 @@ struct ChunkCords {
     bool operator<(const ChunkCords& other) const;
 };
 
+struct Noise {
+    const FastNoiseLite* base;
+    const FastNoiseLite* detail;
+};
 
 class Chunk : public eng::Entity {
     private:
@@ -53,7 +59,7 @@ class Chunk : public eng::Entity {
         BlockID getBlock(int x, int y, int z) const;
         void setBlock(int x, int y, int z, BlockID blockID);
         bool isDirty() const;
-        void generateTerrain(const FastNoiseLite& noise);
+        void generateTerrain(const Noise& noise);
         void buildMesh(const Chunk* neighbors[]);
         void updateMeshData();
 };

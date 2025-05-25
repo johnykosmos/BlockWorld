@@ -11,10 +11,12 @@
 struct ChunkBuildData {
     Chunk* chunk;
     const Chunk* chunkNeighbors[4];
+    bool isNew;
 };
 
 class ChunkBuilder {
     private:
+        const Noise noise;
         std::vector<std::thread> threads;
         std::queue<ChunkBuildData> chunksToBuild;
         std::queue<Chunk*> builtChunks;
@@ -26,7 +28,7 @@ class ChunkBuilder {
         unsigned int neededChunksCounter = 0;
 
     public:
-        ChunkBuilder(unsigned int numberOfThreads);
+        ChunkBuilder(unsigned int numberOfThreads, const Noise& noise);
         ~ChunkBuilder();
         void enqueueChunk(const ChunkBuildData& chunkData);
         void pollFinishedChunks();

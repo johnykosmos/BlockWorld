@@ -1,9 +1,9 @@
 #include "ChunkBuilder.hpp"
 #include <iostream>
-#include <mutex>
 
 
-ChunkBuilder::ChunkBuilder(unsigned int numberOfThreads) {
+ChunkBuilder::ChunkBuilder(unsigned int numberOfThreads,
+        const Noise& noise) : noise(noise) {
     threads.reserve(numberOfThreads);
 
     for (unsigned int i = 0; i < numberOfThreads; i++) {
@@ -24,11 +24,14 @@ ChunkBuilder::ChunkBuilder(unsigned int numberOfThreads) {
                     lock.unlock();
 
                     if (data.chunk) {
-                        std::cout << "buduje czanka\n";
+                        if (data.isNew) {
+                            data.chunk->generateTerrain(this->noise);
+                            ChunkCords cords = data.chunk->getCords();
+                            std::cout << "Generating terrain at: " << cords.x << " " << cords.z << "\n";
+                        }
                         data.chunk->buildMesh(data.chunkNeighbors);
                         std::lock_guard<std::mutex> lock(resultMutex);
                         builtChunks.emplace(data.chunk); 
-                        std::cout << "zbudowalem juz xd czanka\n";
                         builtChunksCondition.notify_one();
                     }
                 }

@@ -2,7 +2,8 @@
 
 #include <map>
 #include <memory>
-#include "Chunk.hpp"
+#include <set>
+#include "FastNoiseLite.h"
 #include "world/ChunkBuilder.hpp"
 
 using CordChunkMap = std::map<ChunkCords, std::unique_ptr<Chunk>>;
@@ -10,16 +11,19 @@ using CordChunkMap = std::map<ChunkCords, std::unique_ptr<Chunk>>;
 
 class ChunkManager {
     private:
+        FastNoiseLite baseNoise;
+        FastNoiseLite detailNoise;
         CordChunkMap loadedChunks;
-        ChunkBuilder chunkBuilder = ChunkBuilder(std::thread::hardware_concurrency());
+        std::unique_ptr<ChunkBuilder> chunkBuilder; 
 
     private:
         const Chunk* getChunk(ChunkCords position);
-        bool loadMissingChunks(std::vector<ChunkCords>& missingChunks);
-        bool unloadNotUsedChunks(std::vector<ChunkCords>& neededChunks);
+        bool loadMissingChunks(std::set<ChunkCords>& missingChunks);
+        bool unloadNotUsedChunks(std::set<ChunkCords>& neededChunks);
         
 
     public:
+        ChunkManager(unsigned int seed);
         const CordChunkMap& getLoadedChunks() const;
         bool updateChunks(Vec3 playerPosition, int renderDistance);
 };

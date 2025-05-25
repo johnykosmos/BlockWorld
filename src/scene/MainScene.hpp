@@ -8,13 +8,13 @@
 #include "Texture.hpp"
 #include "world/ChunkManager.hpp"
 
-#define RENDER_DISTANCE 6
+#define RENDER_DISTANCE 8
 
 class MainScene : public eng::Scene {
     private:
         eng::Engine& engine = eng::Engine::getInstance();
         eng::Renderer renderer = engine.getRenderer();
-        eng::PerspectiveCamera camera = eng::PerspectiveCamera(Vec3(-10.0f, 10.0f, 0.0f), (float)4/3, 0.0f, 0.0f);
+        eng::PerspectiveCamera camera = eng::PerspectiveCamera(Vec3(-10.0f, 23.0f, 0.0f), (float)4/3, 0.0f, 0.0f);
         eng::Shader shader = eng::Shader("assets/shaders/test.shader");
 
         eng::TextureSpec blocksSpec = {
@@ -30,7 +30,7 @@ class MainScene : public eng::Scene {
             .albedo = Vec3(0.6f, 0.6f, 0.6f)
         };
         
-        ChunkManager chunkMng;
+        ChunkManager chunkMng = ChunkManager(1337);
 
     public:
         MainScene();
