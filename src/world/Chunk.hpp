@@ -3,7 +3,7 @@
 #include "Typedefs.hpp"
 #include "Entity.hpp"
 #include "BlockAtlas.hpp"
- 
+#include "FastNoiseLite.h"
 
 #define CHUNK_SIZE_X 16
 #define CHUNK_SIZE_Y 16
@@ -53,6 +53,7 @@ class Chunk : public eng::Entity {
         BlockID getBlock(int x, int y, int z) const;
         void setBlock(int x, int y, int z, BlockID blockID);
         bool isDirty() const;
+        void generateTerrain(const FastNoiseLite& noise);
         void buildMesh(const Chunk* neighbors[]);
         void updateMeshData();
 };

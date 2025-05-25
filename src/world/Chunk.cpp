@@ -108,6 +108,10 @@ void Chunk::setBlock(int x, int y, int z, BlockID blockID) {
     blocks[x][y][z] = blockID;
 }
 
+void Chunk::generateTerrain(const FastNoiseLite& noise) {
+    
+}
+
 bool Chunk::isNeighborBlockTransparent(const Chunk* neighbor,
         const iVec3 neighborBlockPos) const {
     if (!neighbor) return true;
@@ -164,8 +168,7 @@ void Chunk::buildMesh(const Chunk* neighbors[]) {
                             appendFaceVertices(block, Vec3{x, y, z}, 
                                     face, vertices, indices);
                         }
-                    }else if (dir < 4) {
-                        assert(dir < 4);
+                    } else if (dir < 4) {
                         int neighborX = (nX + CHUNK_SIZE_X) % CHUNK_SIZE_X;
                         int neighborZ = (nZ + CHUNK_SIZE_Z) % CHUNK_SIZE_Z;
                         if(isNeighborBlockTransparent(neighbors[dir], iVec3{neighborX, y, neighborZ})) {

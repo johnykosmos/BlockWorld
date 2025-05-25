@@ -19,7 +19,7 @@ const Chunk* ChunkManager::getChunk(ChunkCords position) {
 bool ChunkManager::loadMissingChunks(std::vector<ChunkCords>& missingChunks) {
     bool updated = false;
     for (const auto& missingCords : missingChunks) {
-        if(loadedChunks[missingCords] && loadedChunks[missingCords]->isDirty()) {
+        if(getChunk(missingCords) && loadedChunks[missingCords]->isDirty()) {
             const ChunkBuildData data = {
                 .chunk = loadedChunks[missingCords].get(),
                 .chunkNeighbors = {

@@ -11,7 +11,7 @@ using CordChunkMap = std::map<ChunkCords, std::unique_ptr<Chunk>>;
 class ChunkManager {
     private:
         CordChunkMap loadedChunks;
-        ChunkBuilder chunkBuilder = ChunkBuilder(4);
+        ChunkBuilder chunkBuilder = ChunkBuilder(std::thread::hardware_concurrency());
 
     private:
         const Chunk* getChunk(ChunkCords position);

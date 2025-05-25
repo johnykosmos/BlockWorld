@@ -17,6 +17,7 @@ add_executable(
 
 target_include_directories(BlockWorld
     PRIVATE
+    dependencies/FastNoiseLite/Cpp
     src
 )
 
