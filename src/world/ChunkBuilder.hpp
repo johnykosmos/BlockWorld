@@ -18,6 +18,7 @@ class ChunkBuilder {
     private:
         const Noise noise;
         std::vector<std::thread> threads;
+        std::queue<ChunkBuildData> chunksToGenerate;
         std::queue<ChunkBuildData> chunksToBuild;
         std::queue<Chunk*> builtChunks;
         std::mutex buildQueueMutex;

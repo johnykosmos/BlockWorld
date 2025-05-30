@@ -9,7 +9,7 @@
 #define CHUNK_SIZE_Y 32
 #define CHUNK_SIZE_Z 16
 
-#define SEA_TRESHOLD 13
+#define SEA_TRESHOLD 7
 
 #define CUBE_FACES 6
 #define VERTICES_PER_FACE 4
@@ -27,6 +27,7 @@ struct ChunkCords {
 
     bool operator==(const ChunkCords& other) const;
     bool operator<(const ChunkCords& other) const;
+    ChunkCords operator+(const ChunkCords& other) const;
 };
 
 struct Noise {
@@ -45,6 +46,7 @@ class Chunk : public eng::Entity {
         bool dirty = true;
 
     private: 
+        void fillWater();
         bool isNeighborBlockTransparent(const Chunk* neighbor, 
                 const iVec3 neighborBlockPos) const;
         void appendFaceVertices(BlockID block, 
@@ -59,6 +61,7 @@ class Chunk : public eng::Entity {
         BlockID getBlock(int x, int y, int z) const;
         void setBlock(int x, int y, int z, BlockID blockID);
         bool isDirty() const;
+        void setDirty();
         void generateTerrain(const Noise& noise);
         void buildMesh(const Chunk* neighbors[]);
         void updateMeshData();

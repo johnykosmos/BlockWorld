@@ -12,30 +12,44 @@ ChunkBuilder::ChunkBuilder(unsigned int numberOfThreads,
                     ChunkBuildData data;
                     std::unique_lock<std::mutex> lock(buildQueueMutex);  
                     buildQueueCondition.wait(lock, [this] { 
-                            return stop || !chunksToBuild.empty(); 
+                            return stop || !chunksToGenerate.empty() 
+                            || !chunksToBuild.empty(); 
                         });
 
-                    if (stop && chunksToBuild.empty()) {
+                    if (stop && chunksToGenerate.empty() 
+                            && chunksToBuild.empty()) {
                         return;
                     }
-
-                    data = chunksToBuild.front();
-                    chunksToBuild.pop();
-                    lock.unlock();
-
-                    if (data.chunk) {
-                        if (data.isNew) {
+                    
+                    if (!chunksToGenerate.empty()) {
+                        data = chunksToGenerate.front();
+                        chunksToGenerate.pop();
+                        lock.unlock();
+                        if (data.chunk && data.isNew) {
                             data.chunk->generateTerrain(this->noise);
+                            lock.lock();
+                            chunksToBuild.emplace(data);
+                            lock.unlock();
                             ChunkCords cords = data.chunk->getCords();
                             std::cout << "Generating terrain at: " << cords.x << " " << cords.z << "\n";
                         }
-                        data.chunk->buildMesh(data.chunkNeighbors);
-                        std::lock_guard<std::mutex> lock(resultMutex);
-                        builtChunks.emplace(data.chunk); 
-                        builtChunksCondition.notify_one();
+                        continue;
+                    } else {
+
+                        data = chunksToBuild.front();
+                        chunksToBuild.pop();
+                        lock.unlock();
+
+                        if (data.chunk) {
+                            data.chunk->buildMesh(data.chunkNeighbors);
+                            std::lock_guard<std::mutex> lock(resultMutex);
+                            builtChunks.emplace(data.chunk); 
+                            builtChunksCondition.notify_one();
+                        }
                     }
                 }
                 });
+
     }
 }
 
@@ -53,7 +67,11 @@ ChunkBuilder::~ChunkBuilder() {
 
 void ChunkBuilder::enqueueChunk(const ChunkBuildData& chunkData) {
     std::unique_lock<std::mutex> lock(buildQueueMutex);
-    chunksToBuild.emplace(chunkData);
+    if (chunkData.isNew) {
+        chunksToGenerate.emplace(chunkData);
+    } else {
+        chunksToBuild.emplace(chunkData);
+    }
     neededChunksCounter++;
     lock.unlock();
     buildQueueCondition.notify_one();

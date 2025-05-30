@@ -47,7 +47,7 @@ Vec2 textureUV[4] = {
     {0.0f, 0.0f}, 
     {BASE_UV, 0.0f},     
     {BASE_UV, BASE_UV}, 
-    };
+};
 
 bool ChunkCords::operator==(const ChunkCords& other) const {
     return (this->x == other.x && this->z == other.z) ? true : false;
@@ -59,6 +59,10 @@ bool ChunkCords::operator<(const ChunkCords& other) const {
         }
         return z < other.z; 
     }
+
+ChunkCords ChunkCords::operator+(const ChunkCords& other) const {
+    return ChunkCords{this->x + other.x, this->z + other.z};
+}
 
 Chunk::Chunk(ChunkCords position) : position(position) {
     memset(blocks, 0, sizeof(blocks));
@@ -81,20 +85,36 @@ void Chunk::setBlock(int x, int y, int z, BlockID blockID) {
     blocks[x][y][z] = blockID;
 }
 
+void Chunk::setDirty() {
+    dirty = true;
+}
+
+void Chunk::fillWater() {
+    for (int x = 0; x < CHUNK_SIZE_X; x++) {
+        for (int z = 0; z < CHUNK_SIZE_Z; z++) {
+            if (getBlock(x, SEA_TRESHOLD, z) == BlockID::Air) {
+                setBlock(x, SEA_TRESHOLD, z, BlockID::Water);
+            }
+        }
+    }
+}
+
 void Chunk::generateTerrain(const Noise& noise) {
     for (int x = 0; x < CHUNK_SIZE_X; x++) {
         for (int z = 0; z < CHUNK_SIZE_Z; z++) {
             float worldX = float(position.x * CHUNK_SIZE_X + x);
             float worldZ = float(position.z * CHUNK_SIZE_Z + z);
             float baseValue = (noise.base->GetNoise(worldX, worldZ) + 1.0f) * 0.5f;
-
             float detailValue = (noise.detail->GetNoise(worldX, worldZ) + 1.0f) * 0.5f;
-            float finalValue = baseValue + pow(detailValue, 4.0f);
-            int height = int(finalValue * (CHUNK_SIZE_Y - 6));
-            height = std::clamp(height, 0, CHUNK_SIZE_Y - 6);
+
+            float finalValue = pow(baseValue, 4.0f) * 5 + pow(detailValue, 10.0f) * 2.5f;
+            int height = int(finalValue * (CHUNK_SIZE_Y - 10));
+            height = std::clamp(height, 0, CHUNK_SIZE_Y - 5);
             for (int y = height; y >= 0; y--) {
                 BlockID block;
-                if (y == height) {
+                if (y <= SEA_TRESHOLD && y >= SEA_TRESHOLD - 1) {
+                    block = BlockID::Sand;
+                } else if (y == height && y > SEA_TRESHOLD) {
                     block = BlockID::Grass;
                 } else if (y >= height - 3) {
                     block = BlockID::Dirt;
@@ -105,11 +125,12 @@ void Chunk::generateTerrain(const Noise& noise) {
             }
         }
     }
+    fillWater();
 }
 
 bool Chunk::isNeighborBlockTransparent(const Chunk* neighbor,
         const iVec3 neighborBlockPos) const {
-    if (!neighbor) return true;
+    if (!neighbor) return false;
     return (neighbor->getBlock(neighborBlockPos.x,
                 neighborBlockPos.y, neighborBlockPos.z) == BlockID::Air);
 }

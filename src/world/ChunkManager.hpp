@@ -17,9 +17,9 @@ class ChunkManager {
         std::unique_ptr<ChunkBuilder> chunkBuilder; 
 
     private:
-        const Chunk* getChunk(ChunkCords position);
+        Chunk* getChunk(ChunkCords position);
         bool loadMissingChunks(std::set<ChunkCords>& missingChunks);
-        bool unloadNotUsedChunks(std::set<ChunkCords>& neededChunks);
+        bool unloadNotUsedChunks(std::vector<ChunkCords>& neededChunks);
         
 
     public:
