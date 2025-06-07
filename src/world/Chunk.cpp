@@ -1,8 +1,10 @@
 #include "Chunk.hpp"
+#include "utils/LCG.hpp"
 #include "world/BlockAtlas.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <iostream>
 
 Face cubeFaces[6] = {
     // Right
@@ -37,7 +39,7 @@ Face cubeFaces[6] = {
     }
 };
 
-unsigned int cubeFaceIndices[INDICES_PER_FACE] = {
+uint cubeFaceIndices[INDICES_PER_FACE] = {
     0, 1, 2,
     0, 2, 3
 };
@@ -73,6 +75,7 @@ const eng::Mesh& Chunk::getMesh() const {
     return mesh;
 }
 
+
 const ChunkCords Chunk::getCords() const {
     return position;
 }
@@ -105,14 +108,19 @@ void Chunk::generateTerrain(const Noise& noise) {
             float worldX = float(position.x * CHUNK_SIZE_X + x);
             float worldZ = float(position.z * CHUNK_SIZE_Z + z);
             float baseValue = (noise.base->GetNoise(worldX, worldZ) + 1.0f) * 0.5f;
+
             float detailValue = (noise.detail->GetNoise(worldX, worldZ) + 1.0f) * 0.5f;
 
-            float finalValue = pow(baseValue, 4.0f) * 5 + pow(detailValue, 10.0f) * 2.5f;
+            float cliffZone = (detailValue > 0.7f) ? 1.0f : 0.0f;
+
+            float curve = pow(baseValue, 1.5f);
+
+            float finalValue = curve * detailValue;
             int height = int(finalValue * (CHUNK_SIZE_Y - 10));
             height = std::clamp(height, 0, CHUNK_SIZE_Y - 5);
             for (int y = height; y >= 0; y--) {
                 BlockID block;
-                if (y <= SEA_TRESHOLD && y >= SEA_TRESHOLD - 1) {
+                if (y <= SEA_TRESHOLD + 1 && y >= SEA_TRESHOLD - 2) {
                     block = BlockID::Sand;
                 } else if (y == height && y > SEA_TRESHOLD) {
                     block = BlockID::Grass;
@@ -128,6 +136,77 @@ void Chunk::generateTerrain(const Noise& noise) {
     fillWater();
 }
 
+void Chunk::placeTree(iVec3 position, uint chunkSeed, 
+        Chunk* neighbors[]) {  
+    LCG lcg(chunkSeed + 222);
+    uint height = static_cast<uint>(lcg.nextFloatInRange(
+                                TREE_HEIGHT_MIN, TREE_HEIGHT_MAX));
+    for (uint y = position.y; y <= position.y + height; y++) {
+        if (y >= CHUNK_SIZE_Y) break;
+        setBlock(position.x, y, position.z, BlockID::Log); 
+    }
+
+    int currentLayer = 0;
+    int layerRange = 0;
+    for (uint y = height; y < height + 4; y++) {
+        currentLayer++;
+        if (currentLayer % 3 == 0) layerRange++;
+        for (int x = -2 + layerRange; x <= 2 - layerRange; x++) {
+            for (int z = -2 + layerRange; z <= 2 - layerRange; z++) {
+                int nX = position.x + x;
+                int nY = position.y + y;
+                int nZ = position.z + z;
+                if (nX >= 0 && nX < CHUNK_SIZE_X && nY >= 0 && 
+                        nY < CHUNK_SIZE_Y && nZ >= 0 && nZ < CHUNK_SIZE_Z) {
+                    if (getBlock(nX, nY, nZ) == BlockID::Air) {
+                        setBlock(nX, nY, nZ, BlockID::Leaves);
+                    }
+                } else {
+                    int neighborX = (nX < 0) ? -1 : (nX >= CHUNK_SIZE_X ? 1 : 0);
+                    int neighborZ = (nZ < 0) ? -1 : (nZ >= CHUNK_SIZE_Z ? 1 : 0);
+
+                    ChunkCords neighborCords = {
+                        .x = this->position.x + neighborX,
+                        .z = this->position.z + neighborZ
+                    };
+                    for (int i = 0; i < 4; i++) {
+                        if (neighbors[i] && 
+                                neighbors[i]->getCords() == neighborCords) {
+                            nX = (nX + CHUNK_SIZE_X) % CHUNK_SIZE_X;
+                            nZ = (nZ + CHUNK_SIZE_Z) % CHUNK_SIZE_Z; 
+                            if (neighbors[i]->getBlock(nX, nY, nZ) == 
+                                    BlockID::Air) {
+                                neighbors[i]->setBlock(nX, nY, nZ, 
+                                        BlockID::Leaves);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void Chunk::decorateTerrain(uint worldSeed, Chunk* neighbors[]) {
+    uint chunkSeed = worldSeed + position.x * position.z;
+    LCG lcg(chunkSeed);
+    for (int x = 0; x < CHUNK_SIZE_X; x++) {
+        for (int z = 0; z < CHUNK_SIZE_Z; z++) { 
+            int y;
+            for (y = CHUNK_SIZE_Y - 1; y >= 0; y--) {
+                if (getBlock(x, y, z) != BlockID::Air) break;
+            }
+
+            if (getBlock(x, y, z) == BlockID::Grass) {
+                if (lcg.nextFloat() < 0.002f) {
+                    placeTree(iVec3{x, y + 1, z}, chunkSeed, neighbors);
+                }
+            }
+        }
+    }
+    std::cout << "Decorating chunk at: " << position.x << " " << position.z << "\n";
+}
+
 bool Chunk::isNeighborBlockTransparent(const Chunk* neighbor,
         const iVec3 neighborBlockPos) const {
     if (!neighbor) return false;
@@ -138,8 +217,8 @@ bool Chunk::isNeighborBlockTransparent(const Chunk* neighbor,
 void Chunk::appendFaceVertices(BlockID block,
         const Vec3& coordinates, const Face& face, 
         std::vector<eng::Vertex>& vertices,
-        std::vector<unsigned int>& indices) {
-    unsigned int startIndex = vertices.size();
+        std::vector<uint>& indices) {
+    uint startIndex = vertices.size();
     const Vec2 offsetUV = BlockAtlas::getFaceTextureUV(block, face.normal);
     for (int i = 0; i < VERTICES_PER_FACE; i++) {
         eng::Vertex vertex = {
@@ -162,7 +241,7 @@ bool Chunk::isDirty() const {
     return dirty;
 }
 
-void Chunk::buildMesh(const Chunk* neighbors[]) {
+void Chunk::buildMesh(Chunk* neighbors[]) {
     vertices.clear();
     indices.clear();
     for (int x = 0; x < CHUNK_SIZE_X; x++) {

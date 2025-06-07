@@ -10,7 +10,9 @@ enum class BlockID : char {
     Grass = 2,
     Stone = 3,
     Sand = 4,
-    Water = 5
+    Log = 5,
+    Leaves = 6,
+    Water = 7
 };
 
 struct BlockData {

@@ -46,6 +46,28 @@ std::map<BlockID, BlockData> BlockAtlas::blockMap = {
         }
     },
     {
+        BlockID::Log, 
+        {
+            .topUV = Vec2{3, 1}, 
+            .bottomUV = Vec2{3, 1},
+            .frontUV = Vec2{2, 1},
+            .backUV = Vec2{2, 1},
+            .leftUV = Vec2{2, 1},
+            .rightUV = Vec2{2, 1},
+        }
+    },
+    {
+        BlockID::Leaves, 
+        {
+            .topUV = Vec2{3, 0}, 
+            .bottomUV = Vec2{3, 0},
+            .frontUV = Vec2{3, 0},
+            .backUV = Vec2{3, 0},
+            .leftUV = Vec2{3, 0},
+            .rightUV = Vec2{3, 0},
+        }
+    },
+    {
         BlockID::Water, 
         {
             .topUV = Vec2{0, 2}, 

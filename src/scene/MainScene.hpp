@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Engine.hpp"
+#include "Light.hpp"
 #include "Material.hpp"
 #include "Renderer.hpp"
 #include "Scene.hpp"
@@ -8,7 +9,7 @@
 #include "Texture.hpp"
 #include "world/ChunkManager.hpp"
 
-#define RENDER_DISTANCE 8
+#define RENDER_DISTANCE 12
 
 class MainScene : public eng::Scene {
     private:
@@ -27,9 +28,16 @@ class MainScene : public eng::Scene {
         eng::Material material = {
             .shader = &shader,
             .texture = &blocks,
-            .albedo = Vec3(0.6f, 0.6f, 0.6f)
+            .albedo = Vec3(0.6f, 0.6f, 0.6f),
+            .ambient = Vec3(0.5f, 0.5f, 0.5f),
+            .diffuse = Vec3(0.6f, 0.6f, 0.6f),
+            .specular = Vec3(0.0f, 0.0f, 0.0f),
+            .shininess = 32.0f
         };
-        
+        eng::DirectionalLight baseLight = {
+            .color = Vec3(1,1,1),
+            .direction = Vec3(0,-1,1)
+        }; 
         ChunkManager chunkMng = ChunkManager(1337);
 
     public:

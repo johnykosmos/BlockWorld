@@ -6,10 +6,12 @@
 #include "FastNoiseLite.h"
 
 #define CHUNK_SIZE_X 16
-#define CHUNK_SIZE_Y 32
+#define CHUNK_SIZE_Y 64
 #define CHUNK_SIZE_Z 16
 
 #define SEA_TRESHOLD 7
+#define TREE_HEIGHT_MIN 2.0f
+#define TREE_HEIGHT_MAX 6.0f
 
 #define CUBE_FACES 6
 #define VERTICES_PER_FACE 4
@@ -41,18 +43,20 @@ class Chunk : public eng::Entity {
         ChunkCords position;
         eng::Mesh mesh;
         std::vector<eng::Vertex> vertices;
-        std::vector<unsigned int> indices;
+        std::vector<uint> indices;
 
         bool dirty = true;
 
     private: 
         void fillWater();
+        void placeTree(iVec3 position, uint chunkSeed, 
+                Chunk* neighbors[]);
         bool isNeighborBlockTransparent(const Chunk* neighbor, 
                 const iVec3 neighborBlockPos) const;
         void appendFaceVertices(BlockID block, 
                 const Vec3& coordinates, const Face& face, 
                 std::vector<eng::Vertex>& vertices,
-                std::vector<unsigned int>& indices);
+                std::vector<uint>& indices);
 
     public:
         Chunk(ChunkCords position);
@@ -63,6 +67,7 @@ class Chunk : public eng::Entity {
         bool isDirty() const;
         void setDirty();
         void generateTerrain(const Noise& noise);
-        void buildMesh(const Chunk* neighbors[]);
+        void decorateTerrain(uint worldSeed, Chunk* neighbors[]);
+        void buildMesh(Chunk* neighbors[]);
         void updateMeshData();
 };
