@@ -23,7 +23,7 @@ class ChunkManager {
         
 
     public:
-        ChunkManager(unsigned int seed);
+        ChunkManager(uint seed);
         const CordChunkMap& getLoadedChunks() const;
         bool updateChunks(Vec3 playerPosition, int renderDistance);
 };

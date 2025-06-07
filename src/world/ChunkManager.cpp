@@ -9,17 +9,18 @@ const ChunkCords chunkNeighbors[4] = {
     {1,0},{-1,0},{0,1},{0,-1}
 };
 
-ChunkManager::ChunkManager(unsigned int seed) {
+ChunkManager::ChunkManager(uint seed) {
     baseNoise.SetSeed(seed);
-    baseNoise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
+    baseNoise.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
     baseNoise.SetFractalType(FastNoiseLite::FractalType_FBm);
-    baseNoise.SetFractalOctaves(5);
-    baseNoise.SetFrequency(0.005f);
+    baseNoise.SetFractalOctaves(4);
+    baseNoise.SetFrequency(0.001f);
 
-    detailNoise.SetSeed(seed + 2);
-    detailNoise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
-    detailNoise.SetFractalType(FastNoiseLite::FractalType_None);
-    detailNoise.SetFrequency(0.07f);
+    detailNoise.SetSeed(seed + 100);
+    detailNoise.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
+    detailNoise.SetFractalType(FastNoiseLite::FractalType_FBm);
+    detailNoise.SetFractalOctaves(3);
+    detailNoise.SetFrequency(0.01f);
 
     const Noise noises = {
         .base = &baseNoise,
@@ -27,7 +28,7 @@ ChunkManager::ChunkManager(unsigned int seed) {
     };
 
     chunkBuilder = std::make_unique<ChunkBuilder>(
-            std::thread::hardware_concurrency(), noises);
+            std::thread::hardware_concurrency(), seed, noises);
 }
 
 const CordChunkMap& ChunkManager::getLoadedChunks() const {

@@ -2,22 +2,24 @@
 #include <iostream>
 
 
-ChunkBuilder::ChunkBuilder(unsigned int numberOfThreads,
-        const Noise& noise) : noise(noise) {
+ChunkBuilder::ChunkBuilder(uint numberOfThreads, uint worldSeed,
+        const Noise& noise) : worldSeed(worldSeed), noise(noise) {
     threads.reserve(numberOfThreads);
 
-    for (unsigned int i = 0; i < numberOfThreads; i++) {
+    for (uint i = 0; i < numberOfThreads; i++) {
         threads.emplace_back([this] {
                 while (true) {
                     ChunkBuildData data;
                     std::unique_lock<std::mutex> lock(buildQueueMutex);  
                     buildQueueCondition.wait(lock, [this] { 
-                            return stop || !chunksToGenerate.empty() 
+                            return stop || !chunksToGenerate.empty()
+                            || !chunksToDecorate.empty()
                             || !chunksToBuild.empty(); 
                         });
 
                     if (stop && chunksToGenerate.empty() 
-                            && chunksToBuild.empty()) {
+                            && chunksToBuild.empty() && 
+                            chunksToDecorate.empty()) {
                         return;
                     }
                     
@@ -28,14 +30,25 @@ ChunkBuilder::ChunkBuilder(unsigned int numberOfThreads,
                         if (data.chunk && data.isNew) {
                             data.chunk->generateTerrain(this->noise);
                             lock.lock();
-                            chunksToBuild.emplace(data);
+                            chunksToDecorate.emplace(data);
                             lock.unlock();
                             ChunkCords cords = data.chunk->getCords();
                             std::cout << "Generating terrain at: " << cords.x << " " << cords.z << "\n";
                         }
                         continue;
+                    } else if (!chunksToDecorate.empty()) {
+                        data = chunksToDecorate.front();
+                        chunksToDecorate.pop();
+                        lock.unlock();
+                        if (data.chunk && data.isNew) {
+                            data.chunk->decorateTerrain(this->worldSeed, 
+                                    data.chunkNeighbors);
+                            lock.lock();
+                            chunksToBuild.emplace(data);
+                            lock.unlock();
+                        }
+                        continue;
                     } else {
-
                         data = chunksToBuild.front();
                         chunksToBuild.pop();
                         lock.unlock();

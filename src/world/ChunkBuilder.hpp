@@ -10,15 +10,17 @@
 
 struct ChunkBuildData {
     Chunk* chunk;
-    const Chunk* chunkNeighbors[4];
+    Chunk* chunkNeighbors[4];
     bool isNew;
 };
 
 class ChunkBuilder {
     private:
         const Noise noise;
+        const uint worldSeed;
         std::vector<std::thread> threads;
         std::queue<ChunkBuildData> chunksToGenerate;
+        std::queue<ChunkBuildData> chunksToDecorate;
         std::queue<ChunkBuildData> chunksToBuild;
         std::queue<Chunk*> builtChunks;
         std::mutex buildQueueMutex;
@@ -26,10 +28,10 @@ class ChunkBuilder {
         std::condition_variable buildQueueCondition;
         std::condition_variable builtChunksCondition;
         bool stop = false;
-        unsigned int neededChunksCounter = 0;
+        uint neededChunksCounter = 0;
 
     public:
-        ChunkBuilder(unsigned int numberOfThreads, const Noise& noise);
+        ChunkBuilder(uint numberOfThreads, uint worldSeed, const Noise& noise);
         ~ChunkBuilder();
         void enqueueChunk(const ChunkBuildData& chunkData);
         void pollFinishedChunks();
