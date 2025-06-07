@@ -13,6 +13,7 @@ add_executable(
     src/world/ChunkManager.cpp
     src/world/BlockAtlas.cpp
     src/world/ChunkBuilder.cpp
+    src/utils/LCG.cpp
 )
 
 target_include_directories(BlockWorld
