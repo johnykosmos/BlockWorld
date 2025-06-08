@@ -7,7 +7,9 @@
 #include "Scene.hpp"
 #include "Camera.hpp"
 #include "Texture.hpp"
+#include "Player.hpp"
 #include "world/ChunkManager.hpp"
+
 
 #define RENDER_DISTANCE 12
 
@@ -38,10 +40,10 @@ class MainScene : public eng::Scene {
             .color = Vec3(1,1,1),
             .direction = Vec3(0,-1,1)
         }; 
+        Player player = Player(camera);
         ChunkManager chunkMng = ChunkManager(1337);
 
     public:
         MainScene();
-        void updateCamera();
         void onUpdate() override;
 };
