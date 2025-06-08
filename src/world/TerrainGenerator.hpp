@@ -1,8 +1,7 @@
 #pragma once
 
 #include "world/Chunk.hpp"
-#include <vector>
-
+#include "FastNoiseLite.h"
 
 struct Noise {
     const FastNoiseLite* base;
