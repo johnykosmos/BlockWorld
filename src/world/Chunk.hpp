@@ -32,11 +32,6 @@ struct ChunkCords {
     ChunkCords operator+(const ChunkCords& other) const;
 };
 
-struct Noise {
-    const FastNoiseLite* base;
-    const FastNoiseLite* detail;
-};
-
 class Chunk : public eng::Entity {
     private:
         BlockID blocks[CHUNK_SIZE_X][CHUNK_SIZE_Y][CHUNK_SIZE_Z];
@@ -48,9 +43,6 @@ class Chunk : public eng::Entity {
         bool dirty = true;
 
     private: 
-        void fillWater();
-        void placeTree(iVec3 position, uint chunkSeed, 
-                Chunk* neighbors[]);
         bool isNeighborBlockTransparent(const Chunk* neighbor, 
                 const iVec3 neighborBlockPos) const;
         void appendFaceVertices(BlockID block, 
@@ -66,8 +58,6 @@ class Chunk : public eng::Entity {
         void setBlock(int x, int y, int z, BlockID blockID);
         bool isDirty() const;
         void setDirty();
-        void generateTerrain(const Noise& noise);
-        void decorateTerrain(uint worldSeed, Chunk* neighbors[]);
         void buildMesh(Chunk* neighbors[]);
         void updateMeshData();
 };

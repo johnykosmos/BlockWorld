@@ -2,17 +2,12 @@
 
 
 #include "world/Chunk.hpp"
+#include "TerrainGenerator.hpp"
 #include <condition_variable>
 #include <mutex>
 #include <queue>
 #include <thread>
 #include <vector>
-
-struct ChunkBuildData {
-    Chunk* chunk;
-    Chunk* chunkNeighbors[4];
-    bool isNew;
-};
 
 class ChunkBuilder {
     private:

@@ -13,6 +13,7 @@ add_executable(
     src/world/ChunkManager.cpp
     src/world/BlockAtlas.cpp
     src/world/ChunkBuilder.cpp
+    src/world/TerrainGenerator.cpp
     src/utils/LCG.cpp
 )
 

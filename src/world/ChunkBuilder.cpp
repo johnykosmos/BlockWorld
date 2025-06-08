@@ -1,4 +1,5 @@
 #include "ChunkBuilder.hpp"
+#include "world/TerrainGenerator.hpp"
 #include <iostream>
 
 
@@ -28,7 +29,8 @@ ChunkBuilder::ChunkBuilder(uint numberOfThreads, uint worldSeed,
                         chunksToGenerate.pop();
                         lock.unlock();
                         if (data.chunk && data.isNew) {
-                            data.chunk->generateTerrain(this->noise);
+                            TerrainGenerator::generateTerrain(data.chunk, 
+                                    this->noise);
                             lock.lock();
                             chunksToDecorate.emplace(data);
                             lock.unlock();
@@ -41,8 +43,8 @@ ChunkBuilder::ChunkBuilder(uint numberOfThreads, uint worldSeed,
                         chunksToDecorate.pop();
                         lock.unlock();
                         if (data.chunk && data.isNew) {
-                            data.chunk->decorateTerrain(this->worldSeed, 
-                                    data.chunkNeighbors);
+                            TerrainGenerator::decorateTerrain(data, 
+                                    this->worldSeed);
                             lock.lock();
                             chunksToBuild.emplace(data);
                             lock.unlock();
