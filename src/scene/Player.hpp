@@ -14,7 +14,8 @@ class Player {
         ChunkManager& chunkMng;
 
     private:
-        bool raycastBlock(iVec3& hitPosition);
+        bool raycastBlock(iVec3& hitPosition, iVec3& placePosition);
+        void placeBlock();
         void destroyBlock();
         void updateCamera();
 

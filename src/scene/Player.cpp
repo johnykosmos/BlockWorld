@@ -1,5 +1,8 @@
 #include "Player.hpp"
 #include "Camera.hpp"
+#include "Keys.hpp"
+#include "glm/geometric.hpp"
+#include "utils/CubeRenderParameters.hpp"
 #include "world/BlockAtlas.hpp"
 #include "world/ChunkManager.hpp"
 #include <iostream>
@@ -9,10 +12,11 @@ Player::Player(eng::PerspectiveCamera& camera, ChunkManager& chunkMng) :
     camera(camera), chunkMng(chunkMng) {}
 
 
-bool Player::raycastBlock(iVec3& hitPosition) {
+bool Player::raycastBlock(iVec3& hitPosition, iVec3& placePosition) {
     Vec3 front = camera.getFront();
     Vec3 currentPosition = camera.getPosition();
     for (int i = 0; i < PLAYER_RANGE; i++) {
+        placePosition = currentPosition;
         currentPosition += front;           
         iVec3 blockPos = {
             static_cast<int>(currentPosition.x),
@@ -29,12 +33,21 @@ bool Player::raycastBlock(iVec3& hitPosition) {
     return false;
 }
 
-void Player::destroyBlock() {
-    iVec3 hitPos;
-    if (raycastBlock(hitPos)) {
-        chunkMng.replaceBlock(hitPos, BlockID::Air);
+void Player::placeBlock() {
+    iVec3 hitPos, placePos;
+    Vec3 front = camera.getFront();
+    if (raycastBlock(hitPos, placePos)) {
+        BlockID block = chunkMng.getBlockAt(placePos);
+        if (block == BlockID::Air || block == BlockID::Water) {
+            chunkMng.replaceBlock(placePos, BlockID::Dirt);               
+        }
+    }
+}
 
-        std::cout << "Hit a block at: " << hitPos.x << " " << hitPos.y << " " << hitPos.z << "\n";
+void Player::destroyBlock() {
+    iVec3 hitPos, placePos;
+    if (raycastBlock(hitPos, placePos)) {
+        chunkMng.replaceBlock(hitPos, BlockID::Air);
     }
 
 }
@@ -67,6 +80,8 @@ void Player::update() {
     updateCamera();
     if (input.isKeyPressed(eng::Key::Space)) {
         destroyBlock();
+    } if (input.isKeyPressed(eng::Key::Enter)) {
+        placeBlock();
     }
 }
 
