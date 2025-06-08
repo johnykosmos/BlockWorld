@@ -80,12 +80,12 @@ class MainScene : public eng::Scene {
         /**
          * @brief Manages world chunks and procedural terrain.
          */
-        ChunkManager chunkMng = ChunkManager(1337);
+        ChunkManager chunkMng;
 
         /**
          * @brief The player object representing the user in the scene.
          */
-        Player player = Player(camera, chunkMng);
+        Player player;
 
     public:
         /**

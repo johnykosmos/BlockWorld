@@ -16,7 +16,7 @@ void TerrainGenerator::fillWater(Chunk* chunk) {
 void TerrainGenerator::placeTree(ChunkBuildData& chunkData, iVec3 rootPosition, 
         uint chunkSeed) {  
     Chunk* chunk = chunkData.chunk;
-    LCG lcg(chunkSeed + 222);
+    LCG lcg(chunkSeed + rand());
     uint height = static_cast<uint>(lcg.nextFloatInRange(
                                 TREE_HEIGHT_MIN, TREE_HEIGHT_MAX));
     for (uint y = rootPosition.y; y <= rootPosition.y + height; y++) {

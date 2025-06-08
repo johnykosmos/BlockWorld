@@ -3,6 +3,11 @@
 #include "world/Chunk.hpp"
 #include "FastNoiseLite.h"
 
+
+#define SEA_TRESHOLD 7
+#define TREE_HEIGHT_MIN 2.0f
+#define TREE_HEIGHT_MAX 4.0f
+
 /**
  * @struct Noise
  * @brief Holds references to base and detail noise generators for procedural terrain generation.

@@ -18,6 +18,7 @@ class BlockWorld : public eng::Application {
 
 
 int main() {
+    srand(time(nullptr));
     BlockWorld app = BlockWorld(); 
     app.run(); 
     return 0;

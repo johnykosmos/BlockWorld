@@ -8,11 +8,6 @@
 #define CHUNK_SIZE_Y 64
 #define CHUNK_SIZE_Z 16
 
-#define SEA_TRESHOLD 7
-#define TREE_HEIGHT_MIN 2.0f
-#define TREE_HEIGHT_MAX 6.0f
-
-
 /**
  * @struct ChunkCords
  * @brief Represents 2D chunk coordinates in the world.

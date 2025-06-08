@@ -1,7 +1,8 @@
 #include "MainScene.hpp"
 #include "world/ChunkManager.hpp"
+#include <cstdlib>
 
-MainScene::MainScene() {
+MainScene::MainScene() : chunkMng(rand()), player(camera, chunkMng) {
     setActiveCamera(camera);
     addLight(baseLight);
 }
