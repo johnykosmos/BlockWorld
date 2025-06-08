@@ -40,8 +40,8 @@ class MainScene : public eng::Scene {
             .color = Vec3(1,1,1),
             .direction = Vec3(0,-1,1)
         }; 
-        Player player = Player(camera);
         ChunkManager chunkMng = ChunkManager(1337);
+        Player player = Player(camera, chunkMng);
 
     public:
         MainScene();

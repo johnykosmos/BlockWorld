@@ -60,4 +60,5 @@ class Chunk : public eng::Entity {
         void setDirty();
         void buildMesh(Chunk* neighbors[]);
         void updateMeshData();
+        static ChunkCords worldToChunk(iVec3 worldPos);
 };

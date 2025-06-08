@@ -1,4 +1,6 @@
 #include "ChunkManager.hpp"
+#include "Typedefs.hpp"
+#include "world/BlockAtlas.hpp"
 #include "world/Chunk.hpp"
 #include <iostream>
 #include <set>
@@ -129,7 +131,8 @@ bool ChunkManager::updateChunks(Vec3 playerPosition,
                 .z = (int)playerPosition.z/CHUNK_SIZE_Z + z
             };
             
-            if (!getChunk(wantedCords)) {
+            Chunk* chunk = getChunk(wantedCords);
+            if (!chunk || chunk->isDirty()) {
                 newChunks.insert(wantedCords);
                 for (int i = 0; i < 4; i++) {
                     ChunkCords neighborCords = wantedCords + chunkNeighbors[i];
@@ -149,5 +152,35 @@ bool ChunkManager::updateChunks(Vec3 playerPosition,
     bool unloaded = unloadNotUsedChunks(wantedChunks);
 
     return loaded || unloaded;
+}
+
+BlockID ChunkManager::getBlockAt(iVec3 blockPosition) {
+    ChunkCords chunkCords = Chunk::worldToChunk(blockPosition);
+    iVec3 blockInChunk = {
+        blockPosition.x - chunkCords.x * CHUNK_SIZE_X,
+        blockPosition.y,
+        blockPosition.z - chunkCords.z * CHUNK_SIZE_Z
+    };
+    Chunk* chunk = getChunk(chunkCords);
+    if (chunk) {
+        return chunk->getBlock(blockInChunk.x, blockInChunk.y, 
+                blockInChunk.z);
+    }
+    return BlockID::Air;
+}
+
+void ChunkManager::replaceBlock(iVec3 blockPosition, BlockID block) {
+    ChunkCords chunkCords = Chunk::worldToChunk(blockPosition);
+        iVec3 blockInChunk = {
+        blockPosition.x - chunkCords.x * CHUNK_SIZE_X,
+        blockPosition.y,
+        blockPosition.z - chunkCords.z * CHUNK_SIZE_Z
+    };
+    Chunk* chunk = getChunk(chunkCords);
+    if (chunk) {
+        chunk->setBlock(blockInChunk.x, blockInChunk.y, 
+                blockInChunk.z, block);    
+        chunk->setDirty();
+    }
 }
 

@@ -26,6 +26,8 @@ class ChunkManager {
         ChunkManager(uint seed);
         const CordChunkMap& getLoadedChunks() const;
         bool updateChunks(Vec3 playerPosition, int renderDistance);
+        BlockID getBlockAt(iVec3 blockPosition);
+        void replaceBlock(iVec3 blockPosition, BlockID block);
 };
 
 

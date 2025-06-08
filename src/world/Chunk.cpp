@@ -1,10 +1,6 @@
 #include "Chunk.hpp"
-#include "utils/LCG.hpp"
 #include "world/BlockAtlas.hpp"
-#include <algorithm>
-#include <cmath>
 #include <cstring>
-#include <iostream>
 
 Face cubeFaces[6] = {
     // Right
@@ -167,4 +163,14 @@ void Chunk::buildMesh(Chunk* neighbors[]) {
 
 void Chunk::updateMeshData() {
     mesh.updateData(vertices.data(), vertices.size(), indices.data(), indices.size());
+}
+
+ChunkCords Chunk::worldToChunk(iVec3 worldPos) {
+    ChunkCords chunkCords = {
+        .x = (worldPos.x >= 0) ? worldPos.x / CHUNK_SIZE_X : 
+            (worldPos.x - CHUNK_SIZE_X + 1) / CHUNK_SIZE_X ,
+        .z = (worldPos.z >= 0) ? worldPos.z / CHUNK_SIZE_Z : 
+            (worldPos.z - CHUNK_SIZE_Z + 1) / CHUNK_SIZE_Z
+    };
+    return chunkCords;
 }
