@@ -1,9 +1,10 @@
 #include "Chunk.hpp"
+#include "utils/LCG.hpp"
 #include "world/BlockAtlas.hpp"
-#include <cstdlib>
-#include <ctime>
+#include <algorithm>
+#include <cmath>
+#include <cstring>
 #include <iostream>
-
 
 Face cubeFaces[6] = {
     // Right
@@ -38,7 +39,7 @@ Face cubeFaces[6] = {
     }
 };
 
-unsigned int cubeFaceIndices[INDICES_PER_FACE] = {
+uint cubeFaceIndices[INDICES_PER_FACE] = {
     0, 1, 2,
     0, 2, 3
 };
@@ -48,7 +49,7 @@ Vec2 textureUV[4] = {
     {0.0f, 0.0f}, 
     {BASE_UV, 0.0f},     
     {BASE_UV, BASE_UV}, 
-    };
+};
 
 bool ChunkCords::operator==(const ChunkCords& other) const {
     return (this->x == other.x && this->z == other.z) ? true : false;
@@ -61,41 +62,22 @@ bool ChunkCords::operator<(const ChunkCords& other) const {
         return z < other.z; 
     }
 
+ChunkCords ChunkCords::operator+(const ChunkCords& other) const {
+    return ChunkCords{this->x + other.x, this->z + other.z};
+}
+
 Chunk::Chunk(ChunkCords position) : position(position) {
-    srand(time(NULL));
-    for (int x = 0; x < CHUNK_SIZE_X; x++) {
-        for (int y = 0; y < CHUNK_SIZE_Y; y++) {
-            for (int z = 0; z < CHUNK_SIZE_Z; z++) {
-                if (y > 6)
-                    setBlock(x, y, z, BlockID::Air);       
-                else {
-                    int choice = rand() % 5;
-                    switch(choice) {
-                        case 0:
-                            setBlock(x, y, z, BlockID::Air); 
-                            break;
-                        case 1:
-                            setBlock(x, y, z, BlockID::Stone);
-                            break;
-                        case 2:
-                            setBlock(x, y, z, BlockID::Dirt);
-                            break;
-                        case 3:
-                            setBlock(x, y, z, BlockID::Sand);
-                            break;
-                        case 4:
-                            setBlock(x, y, z, BlockID::Grass);
-                            break;
-                    }
-                }
-            }
-        }
-    }
+    memset(blocks, 0, sizeof(blocks));
     this->translate(Vec3{position.x * CHUNK_SIZE_X, 0.0f, position.z * CHUNK_SIZE_Z});
 }
 
 const eng::Mesh& Chunk::getMesh() const {
     return mesh;
+}
+
+
+const ChunkCords Chunk::getCords() const {
+    return position;
 }
 
 BlockID Chunk::getBlock(int x, int y, int z) const {
@@ -106,9 +88,13 @@ void Chunk::setBlock(int x, int y, int z, BlockID blockID) {
     blocks[x][y][z] = blockID;
 }
 
+void Chunk::setDirty() {
+    dirty = true;
+}
+
 bool Chunk::isNeighborBlockTransparent(const Chunk* neighbor,
         const iVec3 neighborBlockPos) const {
-    if (!neighbor) return true;
+    if (!neighbor) return false;
     return (neighbor->getBlock(neighborBlockPos.x,
                 neighborBlockPos.y, neighborBlockPos.z) == BlockID::Air);
 }
@@ -116,8 +102,8 @@ bool Chunk::isNeighborBlockTransparent(const Chunk* neighbor,
 void Chunk::appendFaceVertices(BlockID block,
         const Vec3& coordinates, const Face& face, 
         std::vector<eng::Vertex>& vertices,
-        std::vector<unsigned int>& indices) {
-    unsigned int startIndex = vertices.size();
+        std::vector<uint>& indices) {
+    uint startIndex = vertices.size();
     const Vec2 offsetUV = BlockAtlas::getFaceTextureUV(block, face.normal);
     for (int i = 0; i < VERTICES_PER_FACE; i++) {
         eng::Vertex vertex = {
@@ -140,9 +126,9 @@ bool Chunk::isDirty() const {
     return dirty;
 }
 
-void Chunk::buildMesh(const Chunk* neighbors[]) {
-    std::vector<eng::Vertex> vertices;
-    std::vector<unsigned int> indices;
+void Chunk::buildMesh(Chunk* neighbors[]) {
+    vertices.clear();
+    indices.clear();
     for (int x = 0; x < CHUNK_SIZE_X; x++) {
         for (int y = 0; y < CHUNK_SIZE_Y; y++) {
             for (int z = 0; z < CHUNK_SIZE_Z; z++) {
@@ -162,8 +148,7 @@ void Chunk::buildMesh(const Chunk* neighbors[]) {
                             appendFaceVertices(block, Vec3{x, y, z}, 
                                     face, vertices, indices);
                         }
-                    }else if (dir < 4) {
-                        assert(dir < 4);
+                    } else if (dir < 4) {
                         int neighborX = (nX + CHUNK_SIZE_X) % CHUNK_SIZE_X;
                         int neighborZ = (nZ + CHUNK_SIZE_Z) % CHUNK_SIZE_Z;
                         if(isNeighborBlockTransparent(neighbors[dir], iVec3{neighborX, y, neighborZ})) {
@@ -177,6 +162,9 @@ void Chunk::buildMesh(const Chunk* neighbors[]) {
         }
     }
     
-    mesh.updateData(vertices.data(), vertices.size(), indices.data(), indices.size());
     dirty = false; 
+}
+
+void Chunk::updateMeshData() {
+    mesh.updateData(vertices.data(), vertices.size(), indices.data(), indices.size());
 }

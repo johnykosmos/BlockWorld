@@ -4,7 +4,8 @@
 
 MainScene::MainScene() {
     setActiveCamera(camera);
-    renderer.enableLighting(false);
+    addLight(baseLight);
+    //renderer.enableLighting(false);
 }
 
 void MainScene::updateCamera(){
@@ -19,13 +20,13 @@ void MainScene::updateCamera(){
     }if (input.isKeyPressed(eng::Key::Left)){
         camera.setYaw(camera.getYaw() - 1);
     }if (input.isKeyPressed(eng::Key::W)){
-        cameraPosition += camera.getFront() * 0.1f;
+        cameraPosition += camera.getFront() * 0.3f;
     }if (input.isKeyPressed(eng::Key::A)){
-        cameraPosition -= camera.getRight() * 0.1f;
+        cameraPosition -= camera.getRight() * 0.3f;
     }if (input.isKeyPressed(eng::Key::S)){
-        cameraPosition -= camera.getFront() * 0.1f;
+        cameraPosition -= camera.getFront() * 0.3f;
     }if (input.isKeyPressed(eng::Key::D)){
-        cameraPosition += camera.getRight() * 0.1f;
+        cameraPosition += camera.getRight() * 0.3f;
     }
 
     camera.setPosition(cameraPosition);

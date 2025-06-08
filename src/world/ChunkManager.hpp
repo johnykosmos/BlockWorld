@@ -2,21 +2,31 @@
 
 #include <map>
 #include <memory>
-#include "Chunk.hpp"
+#include <set>
+#include "FastNoiseLite.h"
+#include "world/ChunkBuilder.hpp"
 
 using CordChunkMap = std::map<ChunkCords, std::unique_ptr<Chunk>>;
 
+
 class ChunkManager {
     private:
+        FastNoiseLite baseNoise;
+        FastNoiseLite detailNoise;
         CordChunkMap loadedChunks;
+        std::unique_ptr<ChunkBuilder> chunkBuilder; 
 
     private:
-        const Chunk* getChunk(ChunkCords position);
-        bool loadMissingChunks(std::vector<ChunkCords>& missingChunks);
+        Chunk* getChunk(ChunkCords position);
+        bool loadMissingChunks(std::set<ChunkCords>& missingChunks);
         bool unloadNotUsedChunks(std::vector<ChunkCords>& neededChunks);
         
 
     public:
+        ChunkManager(uint seed);
         const CordChunkMap& getLoadedChunks() const;
         bool updateChunks(Vec3 playerPosition, int renderDistance);
 };
+
+
+
