@@ -1,55 +1,6 @@
 #include "Chunk.hpp"
-#include "utils/LCG.hpp"
 #include "world/BlockAtlas.hpp"
-#include <algorithm>
-#include <cmath>
 #include <cstring>
-#include <iostream>
-
-Face cubeFaces[6] = {
-    // Right
-    {
-        .position = { {1,0,0}, {1,1,0}, {1,1,1}, {1,0,1} },
-        .normal = {1,0,0}
-    },
-    // Left
-    {
-        .position = { {0,0,1}, {0,1,1}, {0,1,0}, {0,0,0} },
-        .normal = {-1,0,0}
-    },
-    // Front
-    {
-        .position = { {1,0,1}, {1,1,1}, {0,1,1}, {0,0,1} },
-        .normal = {0,0,1}
-    },
-    // Back
-    {
-        .position = { {0,0,0}, {0,1,0}, {1,1,0}, {1,0,0} },
-        .normal = {0,0,-1}
-    },
-    // Top
-    {
-        .position = { {0,1,0}, {0,1,1}, {1,1,1}, {1,1,0} },
-        .normal = {0,1,0}
-    },
-    // Bottom
-    {
-        .position = { {0,0,1}, {0,0,0}, {1,0,0}, {1,0,1} },
-        .normal = {0,-1,0}
-    }
-};
-
-uint cubeFaceIndices[INDICES_PER_FACE] = {
-    0, 1, 2,
-    0, 2, 3
-};
-
-Vec2 textureUV[4] = {
-    {0.0f, BASE_UV},
-    {0.0f, 0.0f}, 
-    {BASE_UV, 0.0f},     
-    {BASE_UV, BASE_UV}, 
-};
 
 bool ChunkCords::operator==(const ChunkCords& other) const {
     return (this->x == other.x && this->z == other.z) ? true : false;
@@ -167,4 +118,14 @@ void Chunk::buildMesh(Chunk* neighbors[]) {
 
 void Chunk::updateMeshData() {
     mesh.updateData(vertices.data(), vertices.size(), indices.data(), indices.size());
+}
+
+ChunkCords Chunk::worldToChunk(iVec3 worldPos) {
+    ChunkCords chunkCords = {
+        .x = (worldPos.x >= 0) ? worldPos.x / CHUNK_SIZE_X : 
+            (worldPos.x - CHUNK_SIZE_X + 1) / CHUNK_SIZE_X ,
+        .z = (worldPos.z >= 0) ? worldPos.z / CHUNK_SIZE_Z : 
+            (worldPos.z - CHUNK_SIZE_Z + 1) / CHUNK_SIZE_Z
+    };
+    return chunkCords;
 }

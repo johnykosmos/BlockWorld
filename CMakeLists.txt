@@ -9,12 +9,14 @@ add_subdirectory("dependencies/GraphicEngine3D")
 add_executable(
     BlockWorld src/main.cpp
     src/scene/MainScene.cpp
+    src/scene/Player.cpp
     src/world/Chunk.cpp
     src/world/ChunkManager.cpp
     src/world/BlockAtlas.cpp
     src/world/ChunkBuilder.cpp
     src/world/TerrainGenerator.cpp
     src/utils/LCG.cpp
+    src/utils/CubeRenderParameters.cpp
 )
 
 target_include_directories(BlockWorld
