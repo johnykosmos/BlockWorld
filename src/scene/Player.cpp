@@ -1,11 +1,9 @@
 #include "Player.hpp"
 #include "Camera.hpp"
+#include "Event.hpp"
 #include "Keys.hpp"
-#include "glm/geometric.hpp"
-#include "utils/CubeRenderParameters.hpp"
 #include "world/BlockAtlas.hpp"
 #include "world/ChunkManager.hpp"
-#include <iostream>
 
 
 Player::Player(eng::PerspectiveCamera& camera, ChunkManager& chunkMng) : 
@@ -13,11 +11,11 @@ Player::Player(eng::PerspectiveCamera& camera, ChunkManager& chunkMng) :
 
 
 bool Player::raycastBlock(iVec3& hitPosition, iVec3& placePosition) {
-    Vec3 front = camera.getFront();
+    Vec3 ray = camera.getFront() * 0.2f;
     Vec3 currentPosition = camera.getPosition();
-    for (int i = 0; i < PLAYER_RANGE; i++) {
+    for (int i = 0; i < PLAYER_RANGE / 0.2f; i++) {
         placePosition = currentPosition;
-        currentPosition += front;           
+        currentPosition += ray;           
         iVec3 blockPos = {
             static_cast<int>(currentPosition.x),
             static_cast<int>(currentPosition.y),
@@ -78,10 +76,15 @@ void Player::updateCamera() {
 
 void Player::update() {
     updateCamera();
-    if (input.isKeyPressed(eng::Key::Space)) {
-        destroyBlock();
-    } if (input.isKeyPressed(eng::Key::Enter)) {
-        placeBlock();
+    eng::Event event;
+    while (input.pollEvents(event)) {
+        if (event.getEventType() == eng::EventType::KeyPressedEvent) { 
+            if (event.getKey().keyCode == eng::Key::Space) {
+                destroyBlock();
+            } else if (event.getKey().keyCode == eng::Key::Enter) {
+                placeBlock();
+            }
+        }
     }
 }
 
